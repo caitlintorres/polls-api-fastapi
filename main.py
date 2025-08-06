@@ -7,7 +7,6 @@ app = FastAPI()
 
 @app.post("/polls", response_model=Poll)
 def create_poll(poll_data: PollCreate):
-    global models.option_counter
     poll_id = models.poll_counter
     options = []
     for opt in poll_data.options:
