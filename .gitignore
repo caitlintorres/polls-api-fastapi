@@ -1,0 +1,29 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# IDE / editor settings
+.vscode/
+.idea/
+*.swp
+
+# Local databases
+*.db
+*.sqlite3
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Python egg metadata
+*.egg-info/
