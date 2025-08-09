@@ -1,112 +1,100 @@
-# 🗳️ FastAPI Polls API
+# FastAPI Polls API (SQLite + SQLAlchemy)
 
-A simple backend project built with **FastAPI** that allows users to create polls, vote on options, and view results. This project is perfect for practicing REST API design and in-memory data storage using Python.
-
----
-
-## 🚀 Features
-
-- ✅ Create a poll with multiple options
-- ✅ Vote on an option
-- ✅ View all polls
-- ✅ View a single poll with vote counts
-- ✅ Delete a poll
+A simple polls API built with FastAPI, SQLite, and SQLAlchemy.  
+You can create polls, vote on options, and retrieve poll results.  
+The code is written so you can easily switch to PostgreSQL or MySQL later.
 
 ---
 
-## 🛠 Tech Stack
-
-- **Language**: Python 3.8+
-- **Framework**: FastAPI
-- **Server**: Uvicorn
-- **Storage**: In-memory (no database)
-
----
-
-## 📦 Requirements
-
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
+## Features
+- Create polls with multiple options
+- Vote for an option
+- Retrieve poll details with vote counts
+- Uses SQLite by default (easy to run locally)
+- ORM powered by SQLAlchemy
+- Auto-generated API docs via Swagger UI
 
 ---
 
-## ▶️ Running the App
-
-Start the development server:
-
-```bash
-uvicorn main:app --reload
-```
-
-Visit the interactive API docs at:
-
-- Swagger UI: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
-- ReDoc: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
+## Requirements
+- Python 3.8+
+- pip
 
 ---
 
-## 📁 Project Structure
+## Installation
 
-```
-polls_api_fastapi/
-├── main.py          # FastAPI app and endpoints
-├── models.py        # In-memory data store
-├── schemas.py       # Pydantic schemas
-├── requirements.txt # Python dependencies
-└── README.md        # Project documentation
-```
+1. Clone the repository
+   git clone https://github.com/yourusername/polls-api-fastapi.git
+   cd polls-api-fastapi
+
+2. Install dependencies
+   pip install -r requirements.txt
+
+3. Run the API
+   uvicorn main:app --reload
+
+4. Access the docs
+   - Swagger UI: http://127.0.0.1:8000/docs
+   - ReDoc: http://127.0.0.1:8000/redoc
 
 ---
 
-## 📬 Example API Usage
+## Project Structure
+polls-api-fastapi/
+│── main.py           # API routes
+│── database.py       # Database connection setup
+│── models.py         # SQLAlchemy models
+│── schemas.py        # Pydantic schemas
+│── polls.db          # SQLite database (auto-created)
+│── requirements.txt  # Python dependencies
 
-### Create a Poll
-```http
-POST /polls
-```
+---
 
-**Body:**
-```json
+## API Endpoints
+
+### Create a poll
+POST /polls/
+Request body:
 {
-  "question": "What's your favorite language?",
+  "question": "What's your favorite programming language?",
   "options": [
-    { "text": "Python" },
-    { "text": "JavaScript" }
+    {"text": "Python"},
+    {"text": "JavaScript"},
+    {"text": "Go"}
   ]
 }
-```
 
-### Vote on a Poll
-```http
-POST /polls/{poll_id}/vote?option_id={option_id}
-```
-
----
-
-## 🧠 Learning Concepts
-
-This project demonstrates:
-
-- FastAPI basics
-- Routing and endpoint creation
-- Data validation with Pydantic
-- Simple state management with in-memory Python structures
-- Interactive API documentation with Swagger
+Response:
+{
+  "id": 1,
+  "question": "What's your favorite programming language?",
+  "options": [
+    {"id": 1, "text": "Python", "votes": 0},
+    {"id": 2, "text": "JavaScript", "votes": 0},
+    {"id": 3, "text": "Go", "votes": 0}
+  ]
+}
 
 ---
 
-## 🔄 Future Improvements
-
-- Persistent storage with SQLite or PostgreSQL
-- User authentication
-- Poll expiration and visibility settings
-- Pagination for large poll sets
+### Get a poll
+GET /polls/{poll_id}  
+Example: /polls/1
 
 ---
 
-## 🧑‍💻 Author
+### Vote for an option
+POST /polls/{poll_id}/vote/{option_id}  
+Example: /polls/1/vote/2
 
-Made with ❤️ using FastAPI.
+---
+
+## Switching to PostgreSQL or MySQL
+Edit SQLALCHEMY_DATABASE_URL in database.py:
+
+# PostgreSQL
+SQLALCHEMY_DATABASE_URL = "postgresql://user:password@localhost/dbname"
+
+# MySQL
+SQLALCHEMY_DATABASE_URL = "mysql+pymysql://user:password@localhost/dbname"

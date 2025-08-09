@@ -1,19 +1,28 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 
-class OptionCreate(BaseModel):
+class OptionBase(BaseModel):
     text: str
 
-class PollCreate(BaseModel):
-    question: str
-    options: List[OptionCreate]
+class OptionCreate(OptionBase):
+    pass
 
-class Option(BaseModel):
+class Option(OptionBase):
     id: int
-    text: str
     votes: int
 
-class Poll(BaseModel):
-    id: int
+    class Config:
+        orm_mode = True
+
+class PollBase(BaseModel):
     question: str
+
+class PollCreate(PollBase):
+    options: List[OptionCreate]
+
+class Poll(PollBase):
+    id: int
     options: List[Option]
+
+    class Config:
+        orm_mode = True

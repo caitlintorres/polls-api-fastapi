@@ -1,48 +1,47 @@
-from fastapi import FastAPI, HTTPException
-from typing import List
-from schemas import PollCreate, Poll, Option
-import models
+from fastapi import FastAPI, Depends, HTTPException
+from sqlalchemy.orm import Session
+import models, schemas
+from database import SessionLocal, engine
+
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-@app.post("/polls", response_model=Poll)
-def create_poll(poll_data: PollCreate):
-    poll_id = models.poll_counter
-    options = []
-    for opt in poll_data.options:
-        options.append(Option(id=models.option_counter, text=opt.text, votes=0))
-        models.option_counter += 1
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-    poll = Poll(id=poll_id, question=poll_data.question, options=options)
-    models.polls[poll_id] = poll
-    models.poll_counter += 1
-    return poll
+@app.post("/polls/", response_model=schemas.Poll)
+def create_poll(poll: schemas.PollCreate, db: Session = Depends(get_db)):
+    db_poll = models.Poll(question=poll.question)
+    db.add(db_poll)
+    db.commit()
+    db.refresh(db_poll)
 
-@app.get("/polls", response_model=List[Poll])
-def get_polls():
-    return list(models.polls.values())
-
-@app.get("/polls/{poll_id}", response_model=Poll)
-def get_poll(poll_id: int):
-    if poll_id not in models.polls:
-        raise HTTPException(status_code=404, detail="Poll not found")
-    return models.polls[poll_id]
-
-@app.post("/polls/{poll_id}/vote")
-def vote(poll_id: int, option_id: int):
-    if poll_id not in models.polls:
-        raise HTTPException(status_code=404, detail="Poll not found")
-
-    poll = models.polls[poll_id]
     for option in poll.options:
-        if option.id == option_id:
-            option.votes += 1
-            return {"message": "Vote recorded"}
-    raise HTTPException(status_code=404, detail="Option not found")
+        db_option = models.Option(text=option.text, poll_id=db_poll.id)
+        db.add(db_option)
+    db.commit()
+    db.refresh(db_poll)
+    return db_poll
 
-@app.delete("/polls/{poll_id}")
-def delete_poll(poll_id: int):
-    if poll_id not in models.polls:
+@app.get("/polls/{poll_id}", response_model=schemas.Poll)
+def get_poll(poll_id: int, db: Session = Depends(get_db)):
+    db_poll = db.query(models.Poll).filter(models.Poll.id == poll_id).first()
+    if not db_poll:
         raise HTTPException(status_code=404, detail="Poll not found")
-    del models.polls[poll_id]
-    return {"message": "Poll deleted"}
+    return db_poll
+
+@app.post("/polls/{poll_id}/vote/{option_id}", response_model=schemas.Poll)
+def vote_poll(poll_id: int, option_id: int, db: Session = Depends(get_db)):
+    db_option = db.query(models.Option).filter(
+        models.Option.id == option_id, models.Option.poll_id == poll_id
+    ).first()
+    if not db_option:
+        raise HTTPException(status_code=404, detail="Option not found")
+    db_option.votes += 1
+    db.commit()
+    return db.query(models.Poll).filter(models.Poll.id == poll_id).first()
