@@ -1,5 +1,7 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request, Form
 from sqlalchemy.orm import Session
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import RedirectResponse
 import models, schemas
 from database import SessionLocal, engine
 
@@ -7,12 +9,17 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
+# Jinja2 templates setup
+templates = Jinja2Templates(directory="templates")
+
 def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
+
+# ---------- API Endpoints ----------
 
 @app.post("/polls/", response_model=schemas.Poll)
 def create_poll(poll: schemas.PollCreate, db: Session = Depends(get_db)):
@@ -45,3 +52,31 @@ def vote_poll(poll_id: int, option_id: int, db: Session = Depends(get_db)):
     db_option.votes += 1
     db.commit()
     return db.query(models.Poll).filter(models.Poll.id == poll_id).first()
+
+# ---------- HTML Routes (Jinja2) ----------
+
+# Home page listing all polls
+@app.get("/", response_class=HTMLResponse)
+def read_index(request: Request, db: Session = Depends(get_db)):
+    polls = db.query(models.Poll).all()
+    return templates.TemplateResponse("index.html", {"request": request, "polls": polls})
+
+# Show poll detail page
+@app.get("/polls/{poll_id}", response_class=HTMLResponse)
+def get_poll(request: Request, poll_id: int, db: Session = Depends(get_db)):
+    db_poll = db.query(models.Poll).filter(models.Poll.id == poll_id).first()
+    if not db_poll:
+        raise HTTPException(status_code=404, detail="Poll not found")
+    return templates.TemplateResponse("poll.html", {"request": request, "poll": db_poll})
+
+# Vote from HTML form
+@app.post("/polls/{poll_id}/vote")
+def vote_poll(poll_id: int, option_id: int = Form(...), db: Session = Depends(get_db)):
+    db_option = db.query(models.Option).filter(
+        models.Option.id == option_id, models.Option.poll_id == poll_id
+    ).first()
+    if not db_option:
+        raise HTTPException(status_code=404, detail="Option not found")
+    db_option.votes += 1
+    db.commit()
+    return RedirectResponse(url=f"/polls/{poll_id}", status_code=303)
