@@ -80,3 +80,34 @@ def vote_poll(poll_id: int, option_id: int = Form(...), db: Session = Depends(ge
     db_option.votes += 1
     db.commit()
     return RedirectResponse(url=f"/polls/{poll_id}", status_code=303)
+
+# Show form to create a new poll
+@app.get("/polls/new", response_class=HTMLResponse)
+def new_poll_form(request: Request):
+    return templates.TemplateResponse("new_poll.html", {"request": request})
+
+# Handle form submission to create a new poll
+@app.post("/polls/new")
+def create_poll_form(
+    request: Request,
+    question: str = Form(...),
+    options: List[str] = Form(...),  # multiple options submitted with same field name
+    db: Session = Depends(get_db),
+):
+    if not question or not options:
+        # Simple validation
+        return templates.TemplateResponse(
+            "new_poll.html",
+            {"request": request, "error": "Please provide a question and at least one option."},
+        )
+    # Create poll in DB
+    db_poll = models.Poll(question=question)
+    db.add(db_poll)
+    db.commit()
+    db.refresh(db_poll)
+
+    for option_text in options:
+        db_option = models.Option(text=option_text, poll_id=db_poll.id)
+        db.add(db_option)
+    db.commit()
+    return RedirectResponse(url="/", status_code=303)
