@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ poll.question }}</title>
+</head>
+<body>
+    <h1>{{ poll.question }}</h1>
+
+    <form method="post" action="/polls/{{ poll.id }}/vote">
+        {% for option in poll.options %}
+            <div>
+                <label>
+                    <input type="radio" name="option_id" value="{{ option.id }}" required>
+                    {{ option.text }} ({{ option.votes }} votes)
+                </label>
+            </div>
+        {% endfor %}
+        <button type="submit">Vote</button>
+    </form>
+
+    <p><a href="/">Back to polls</a></p>
+</body>
+</html>
