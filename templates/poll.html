@@ -1,23 +1,25 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{ poll.question }}</title>
-</head>
-<body>
-    <h1>{{ poll.question }}</h1>
+{% extends "base.html" %}
 
-    <form method="post" action="/polls/{{ poll.id }}/vote">
+{% block content %}
+<div class="bg-white p-6 rounded-lg shadow-md">
+    <h2 class="text-2xl font-semibold mb-4">{{ poll.question }}</h2>
+
+    <form method="post" action="/polls/{{ poll.id }}/vote" class="space-y-4">
         {% for option in poll.options %}
             <div>
-                <label>
-                    <input type="radio" name="option_id" value="{{ option.id }}" required>
-                    {{ option.text }} ({{ option.votes }} votes)
+                <label class="flex items-center space-x-2">
+                    <input type="radio" name="option_id" value="{{ option.id }}" required class="text-blue-600">
+                    <span>{{ option.text }} <span class="text-gray-500 text-sm">({{ option.votes }} votes)</span></span>
                 </label>
             </div>
         {% endfor %}
-        <button type="submit">Vote</button>
+        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+            Vote
+        </button>
     </form>
 
-    <p><a href="/">Back to polls</a></p>
-</body>
-</html>
+    <p class="mt-4">
+        <a href="/" class="text-blue-600 hover:underline">← Back to polls</a>
+    </p>
+</div>
+{% endblock %}
