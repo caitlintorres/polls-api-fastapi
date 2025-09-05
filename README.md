@@ -25,7 +25,7 @@ The code is written so you can easily switch to PostgreSQL or MySQL later.
 ## Installation
 
 1. Clone the repository
-   git clone https://github.com/yourusername/polls-api-fastapi.git
+   git clone https://github.com/caitlintorres/polls-api-fastapi.git
    cd polls-api-fastapi
 
 2. Install dependencies
